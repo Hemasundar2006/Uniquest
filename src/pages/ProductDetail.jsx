@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, ShoppingCart, Heart, Share2, Check, Truck, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, ShoppingCart, Heart, Share2, Check, Truck, ShieldCheck, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { fetchProductDetails, fetchProductReviews } from '../api/mockApi';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/products/ProductCard';
+import ImageZoom from '../components/products/ImageZoom';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -100,25 +101,25 @@ export default function ProductDetail() {
     <div className="bg-gray-50">
       <div className="container-custom py-8">
         {/* Breadcrumb */}
-        <nav className="mb-8 text-sm">
-          <ol className="flex items-center space-x-2 text-gray-600">
+        <nav className="mb-4 sm:mb-8 text-xs sm:text-sm overflow-x-auto">
+          <ol className="flex items-center space-x-2 text-gray-600 whitespace-nowrap">
             <li><Link to="/" className="hover:text-primary-600">Home</Link></li>
             <li>/</li>
             <li><Link to="/shop" className="hover:text-primary-600">Shop</Link></li>
             <li>/</li>
-            <li className="text-gray-900 font-medium">{product.name}</li>
+            <li className="text-gray-900 font-medium truncate max-w-[200px] sm:max-w-none">{product.name}</li>
           </ol>
         </nav>
 
         {/* Product Section */}
-        <div className="grid md:grid-cols-2 gap-12 mb-16">
+        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mb-8 sm:mb-16">
           {/* Image Gallery */}
           <div>
-            <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg mb-4 group">
-              <img
-                src={product.images[selectedImage]}
+            <div className="relative bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-lg mb-4">
+              <ImageZoom
+                image={product.images[selectedImage]}
                 alt={product.name}
-                className="w-full h-96 md:h-[500px] object-cover"
+                className="w-full h-64 sm:h-80 md:h-96 lg:h-[500px]"
               />
               
               {/* Image Navigation Arrows */}
@@ -141,8 +142,14 @@ export default function ProductDetail() {
 
               {/* Stock Badge */}
               {!product.inStock && (
-                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg font-semibold">
+                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg font-semibold z-10">
                   Out of Stock
+                </div>
+              )}
+              {(product.stockQuantity !== undefined && product.stockQuantity > 0 && product.stockQuantity <= 5) && (
+                <div className="absolute top-4 right-4 bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold z-10 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  Only {product.stockQuantity} left!
                 </div>
               )}
             </div>
@@ -167,8 +174,8 @@ export default function ProductDetail() {
 
           {/* Product Info */}
           <div>
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">{product.name}</h1>
 
               {/* Rating */}
               <div className="flex items-center mb-6">
@@ -253,49 +260,68 @@ export default function ProductDetail() {
               )}
 
               {/* Quantity */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-900 mb-3">Quantity</label>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center border-2 border-gray-300 rounded-lg">
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-sm font-semibold text-gray-900 mb-2 sm:mb-3">Quantity</label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="flex items-center border-2 border-gray-300 rounded-lg w-fit">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="px-4 py-3 hover:bg-gray-100 transition-colors"
+                      className="px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-gray-100 transition-colors touch-target"
                     >
                       -
                     </button>
-                    <span className="px-6 py-3 border-x-2 border-gray-300 font-semibold">{quantity}</span>
+                    <span className="px-4 sm:px-6 py-2.5 sm:py-3 border-x-2 border-gray-300 font-semibold text-sm sm:text-base min-w-[3rem] text-center">{quantity}</span>
                     <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="px-4 py-3 hover:bg-gray-100 transition-colors"
+                      onClick={() => {
+                        const maxQty = product.stockQuantity !== undefined ? product.stockQuantity : 999;
+                        setQuantity(Math.min(maxQty, quantity + 1));
+                      }}
+                      disabled={product.stockQuantity !== undefined && quantity >= product.stockQuantity}
+                      className="px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-target"
                     >
                       +
                     </button>
                   </div>
                   {product.inStock && (
-                    <span className="flex items-center text-green-600 font-medium">
-                      <Check className="w-5 h-5 mr-1" />
-                      In Stock
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="flex items-center text-green-600 font-medium text-sm sm:text-base">
+                        <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-1 flex-shrink-0" />
+                        In Stock
+                      </span>
+                      {product.stockQuantity !== undefined && product.stockQuantity > 0 && product.stockQuantity <= 5 && (
+                        <span className="flex items-center text-orange-600 text-xs sm:text-sm font-medium mt-1">
+                          <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+                          Only {product.stockQuantity} left in stock!
+                        </span>
+                      )}
+                      {product.stockQuantity !== undefined && product.stockQuantity > 5 && (
+                        <span className="text-xs sm:text-sm text-gray-600 mt-1">
+                          {product.stockQuantity} in stock
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <button
                   onClick={handleAddToCart}
                   disabled={!product.inStock}
-                  className="flex-1 btn-primary flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 btn-primary flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
                 >
-                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Add to Cart
                 </button>
-                <button className="p-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Heart className="w-6 h-6" />
-                </button>
-                <button className="p-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Share2 className="w-6 h-6" />
-                </button>
+                <div className="flex gap-3 sm:gap-4 order-1 sm:order-2">
+                  <button className="p-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors touch-target">
+                    <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                  <button className="p-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors touch-target">
+                    <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                </div>
               </div>
 
               {/* Features */}
@@ -314,12 +340,12 @@ export default function ProductDetail() {
         </div>
 
         {/* Tabs Section */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-16">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 mb-8 sm:mb-16">
           {/* Tab Headers */}
-          <div className="flex border-b border-gray-200 mb-8">
+          <div className="flex overflow-x-auto border-b border-gray-200 mb-6 sm:mb-8 -mx-4 sm:mx-0 px-4 sm:px-0 scrollbar-hide">
             <button
               onClick={() => setActiveTab('description')}
-              className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
                 activeTab === 'description'
                   ? 'border-primary-600 text-primary-600'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -328,8 +354,18 @@ export default function ProductDetail() {
               Description
             </button>
             <button
+              onClick={() => setActiveTab('story')}
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                activeTab === 'story'
+                  ? 'border-primary-600 text-primary-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Story & Origin
+            </button>
+            <button
               onClick={() => setActiveTab('features')}
-              className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
                 activeTab === 'features'
                   ? 'border-primary-600 text-primary-600'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -339,17 +375,18 @@ export default function ProductDetail() {
             </button>
             <button
               onClick={() => setActiveTab('shipping')}
-              className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
                 activeTab === 'shipping'
                   ? 'border-primary-600 text-primary-600'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
             >
-              Shipping & Delivery
+              <span className="hidden sm:inline">Shipping & Delivery</span>
+              <span className="sm:hidden">Shipping</span>
             </button>
             <button
               onClick={() => setActiveTab('reviews')}
-              className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base ${
                 activeTab === 'reviews'
                   ? 'border-primary-600 text-primary-600'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -364,6 +401,37 @@ export default function ProductDetail() {
             {activeTab === 'description' && (
               <div className="prose max-w-none">
                 <p className="text-gray-700 leading-relaxed">{product.description}</p>
+              </div>
+            )}
+
+            {activeTab === 'story' && (
+              <div className="space-y-6">
+                {product.story ? (
+                  <>
+                    {product.story.artisan && (
+                      <div className="border-l-4 border-primary-600 pl-6 py-4 bg-primary-50 rounded-r-lg">
+                        <h3 className="font-bold text-gray-900 mb-2 text-lg">Artisan</h3>
+                        <p className="text-gray-700 leading-relaxed">{product.story.artisan}</p>
+                      </div>
+                    )}
+                    {product.story.materialSource && (
+                      <div className="border-l-4 border-green-600 pl-6 py-4 bg-green-50 rounded-r-lg">
+                        <h3 className="font-bold text-gray-900 mb-2 text-lg">Material Source</h3>
+                        <p className="text-gray-700 leading-relaxed">{product.story.materialSource}</p>
+                      </div>
+                    )}
+                    {product.story.inspiration && (
+                      <div className="border-l-4 border-purple-600 pl-6 py-4 bg-purple-50 rounded-r-lg">
+                        <h3 className="font-bold text-gray-900 mb-2 text-lg">Inspiration</h3>
+                        <p className="text-gray-700 leading-relaxed">{product.story.inspiration}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg">
+                    <p className="text-gray-600">No story information available for this product.</p>
+                  </div>
+                )}
               </div>
             )}
 

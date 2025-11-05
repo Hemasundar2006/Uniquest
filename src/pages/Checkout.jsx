@@ -324,11 +324,11 @@ export default function Checkout() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="container-custom py-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">Checkout</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-6 sm:mb-8">Checkout</h1>
 
         {/* Progress Steps */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between max-w-3xl mx-auto">
+        <div className="mb-8 sm:mb-12">
+          <div className="flex items-center justify-between max-w-3xl mx-auto px-2 sm:px-0">
             {steps.map((step, index) => {
               const Icon = step.icon;
               const isCompleted = currentStep > step.id;
@@ -336,9 +336,9 @@ export default function Checkout() {
 
               return (
                 <React.Fragment key={step.id}>
-                  <div className="flex flex-col items-center flex-1">
+                  <div className="flex flex-col items-center flex-1 min-w-0">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-colors ${
+                      className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 transition-colors flex-shrink-0 ${
                         isCompleted
                           ? 'bg-green-600 text-white'
                           : isCurrent
@@ -346,14 +346,15 @@ export default function Checkout() {
                           : 'bg-gray-300 text-gray-600'
                       }`}
                     >
-                      {isCompleted ? <Check className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                      {isCompleted ? <Check className="w-5 h-5 sm:w-6 sm:h-6" /> : <Icon className="w-5 h-5 sm:w-6 sm:h-6" />}
                     </div>
-                    <span className={`text-sm font-medium text-center ${isCurrent ? 'text-gray-900' : 'text-gray-600'}`}>
-                      {step.name}
+                    <span className={`text-xs sm:text-sm font-medium text-center px-1 ${isCurrent ? 'text-gray-900' : 'text-gray-600'}`}>
+                      <span className="hidden sm:inline">{step.name}</span>
+                      <span className="sm:hidden">{step.name.split(' ')[0]}</span>
                     </span>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`h-1 flex-1 mx-4 rounded ${isCompleted ? 'bg-green-600' : 'bg-gray-300'}`} />
+                    <div className={`h-1 flex-1 mx-2 sm:mx-4 rounded ${isCompleted ? 'bg-green-600' : 'bg-gray-300'}`} />
                   )}
                 </React.Fragment>
               );
@@ -361,14 +362,14 @@ export default function Checkout() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Form Section */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
               {/* Step 1: Contact & Shipping */}
               {currentStep === 1 && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Contact & Shipping Information</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Contact & Shipping Information</h2>
                   
                   <div className="space-y-4">
                     <div>
@@ -478,7 +479,7 @@ export default function Checkout() {
               {/* Step 2: Shipping Method */}
               {currentStep === 2 && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Shipping Method</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Select Shipping Method</h2>
 
                   <div className="space-y-4">
                     {shippingMethods.map((method) => (
@@ -536,11 +537,11 @@ export default function Checkout() {
               {/* Step 3: Payment */}
               {currentStep === 3 && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Payment Method</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Select Payment Method</h2>
 
                   {/* Payment Method Selection */}
-                  <div className="mb-6">
-                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="mb-4 sm:mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
                       {getPaymentMethods().map((method) => (
                         <label
                           key={method.id}
@@ -708,8 +709,8 @@ export default function Checkout() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:sticky lg:top-24">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Order Summary</h2>
 
               {/* Items */}
               <div className="space-y-4 mb-6 max-h-60 overflow-y-auto">

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { User, MapPin, Package, Search, ChevronRight } from 'lucide-react';
 import { fetchUserOrders, trackOrder } from '../api/mockApi';
+import { useAuth } from '../context/AuthContext';
 
 const tabs = [
   { id: 'orders', name: 'Order History', icon: Package },
@@ -10,12 +12,37 @@ const tabs = [
 ];
 
 export default function Account() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated, updateProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('orders');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
   const [trackingResult, setTrackingResult] = useState(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
+  const [profileData, setProfileData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    phone: '',
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: '/account' } } });
+      return;
+    }
+    
+    if (user) {
+      setProfileData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+      });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     if (activeTab === 'orders') {
@@ -67,20 +94,21 @@ export default function Account() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="container-custom py-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">My Account</h1>
+      <div className="container-custom py-4 sm:py-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-8">My Account</h1>
 
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <div className="flex items-center mb-6 pb-6 border-b">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-800 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  JD
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start mb-4 sm:mb-6 pb-4 sm:pb-6 border-b gap-3 sm:gap-0">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary-600 to-primary-800 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold flex-shrink-0">
+                  {user ? (user.firstName?.[0] || user.name?.[0] || user.email?.[0] || 'U').toUpperCase() : ''}
+                  {user && (user.lastName?.[0] || '').toUpperCase()}
                 </div>
-                <div className="ml-4">
-                  <p className="font-semibold text-gray-900">John Doe</p>
-                  <p className="text-sm text-gray-600">john.doe@example.com</p>
+                <div className="sm:ml-4 text-center sm:text-left">
+                  <p className="font-semibold text-gray-900 text-sm sm:text-base">{user?.name || user?.email || 'User'}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 break-all">{user?.email || ''}</p>
                 </div>
               </div>
 
@@ -110,8 +138,8 @@ export default function Account() {
           <div className="lg:col-span-3">
             {/* Order History */}
             {activeTab === 'orders' && (
-              <div className="bg-white rounded-xl shadow-md p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Order History</h2>
+              <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 lg:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Order History</h2>
 
                 {loading ? (
                   <div className="space-y-4">
@@ -130,20 +158,20 @@ export default function Account() {
                 ) : (
                   <div className="space-y-4">
                     {orders.map(order => (
-                      <div key={order.id} className="border rounded-xl p-6 hover:shadow-lg transition-shadow">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                      <div key={order.id} className="border rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
                           <div>
-                            <p className="text-sm text-gray-600">Order Number</p>
-                            <p className="text-lg font-bold text-gray-900">{order.id}</p>
+                            <p className="text-xs sm:text-sm text-gray-600">Order Number</p>
+                            <p className="text-base sm:text-lg font-bold text-gray-900 break-all">{order.id}</p>
                           </div>
-                          <div className="mt-2 md:mt-0">
-                            <span className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor(order.status)}`}>
+                          <div className="mt-2 sm:mt-0">
+                            <span className={`inline-block px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold ${getStatusColor(order.status)}`}>
                               {order.status}
                             </span>
                           </div>
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
                           <div>
                             <p className="text-sm text-gray-600">Order Date</p>
                             <p className="font-medium text-gray-900">
@@ -178,18 +206,26 @@ export default function Account() {
                           </div>
                         </div>
 
-                        {order.trackingNumber && (
-                          <button
-                            onClick={() => {
-                              setActiveTab('tracking');
-                              setTrackingNumber(order.trackingNumber);
-                            }}
-                            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                          {order.trackingNumber && (
+                            <button
+                              onClick={() => {
+                                setActiveTab('tracking');
+                                setTrackingNumber(order.trackingNumber);
+                              }}
+                              className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm sm:text-base"
+                            >
+                              Track Order
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          )}
+                          <Link
+                            to={`/account/orders/${order.id}`}
+                            className="flex-1 text-center px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm sm:text-base"
                           >
-                            Track Order
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                        )}
+                            View Details
+                          </Link>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -199,29 +235,66 @@ export default function Account() {
 
             {/* Profile Settings */}
             {activeTab === 'profile' && (
-              <div className="bg-white rounded-xl shadow-md p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Profile Settings</h2>
+              <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 lg:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Profile Settings</h2>
 
-                <form className="space-y-6">
+                <form 
+                  className="space-y-6"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setProfileSaving(true);
+                    try {
+                      await updateProfile(profileData);
+                      alert('Profile updated successfully!');
+                    } catch (error) {
+                      alert('Failed to update profile. Please try again.');
+                    } finally {
+                      setProfileSaving(false);
+                    }
+                  }}
+                >
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">First Name</label>
-                      <input type="text" className="input-field" defaultValue="John" />
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={profileData.firstName}
+                        onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
+                        required
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">Last Name</label>
-                      <input type="text" className="input-field" defaultValue="Doe" />
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        value={profileData.lastName}
+                        onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
+                        required
+                      />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">Email</label>
-                    <input type="email" className="input-field" defaultValue="john.doe@example.com" />
+                    <input 
+                      type="email" 
+                      className="input-field" 
+                      value={profileData.email}
+                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                      required
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">Phone</label>
-                    <input type="tel" className="input-field" defaultValue="+1 (555) 123-4567" />
+                    <input 
+                      type="tel" 
+                      className="input-field" 
+                      value={profileData.phone}
+                      onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                    />
                   </div>
 
                   <div className="border-t pt-6">
@@ -242,8 +315,12 @@ export default function Account() {
                     </div>
                   </div>
 
-                  <button type="submit" className="btn-primary">
-                    Save Changes
+                  <button 
+                    type="submit" 
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={profileSaving}
+                  >
+                    {profileSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </form>
               </div>
@@ -251,13 +328,13 @@ export default function Account() {
 
             {/* Addresses */}
             {activeTab === 'addresses' && (
-              <div className="bg-white rounded-xl shadow-md p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Saved Addresses</h2>
-                  <button className="btn-primary">Add New Address</button>
+              <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 lg:p-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Saved Addresses</h2>
+                  <button className="btn-primary w-full sm:w-auto text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3">Add New Address</button>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   {/* Default Address */}
                   <div className="border-2 border-primary-600 rounded-xl p-6 relative">
                     <span className="absolute top-4 right-4 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full">
@@ -303,8 +380,8 @@ export default function Account() {
 
             {/* Track Order */}
             {activeTab === 'tracking' && (
-              <div className="bg-white rounded-xl shadow-md p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Track Your Order</h2>
+              <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 lg:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Track Your Order</h2>
 
                 <form onSubmit={handleTrackOrder} className="mb-8">
                   <label className="block text-sm font-semibold text-gray-900 mb-2">

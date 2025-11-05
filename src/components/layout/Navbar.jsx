@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, LogOut } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
+import MiniCart from '../cart/MiniCart';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { getCartCount } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSearch = (e) => {
@@ -69,9 +73,10 @@ export default function Navbar() {
             </button>
 
             {/* Cart */}
-            <Link 
-              to="/cart" 
+            <button
+              onClick={() => setIsMiniCartOpen(true)}
               className="relative text-gray-700 hover:text-primary-600 transition-colors group"
+              aria-label="Open cart"
             >
               <ShoppingCart className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
               {cartCount > 0 && (
@@ -79,15 +84,37 @@ export default function Navbar() {
                   {cartCount}
                 </span>
               )}
-            </Link>
+            </button>
 
             {/* User */}
-            <Link 
-              to="/account" 
-              className="hidden sm:block text-gray-700 hover:text-primary-600 transition-colors group"
-            >
-              <User className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
-            </Link>
+            {isAuthenticated ? (
+              <div className="hidden sm:flex items-center gap-3">
+                <Link 
+                  to="/account" 
+                  className="text-gray-700 hover:text-primary-600 transition-colors group"
+                  title={user?.name || user?.email}
+                >
+                  <User className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate('/');
+                  }}
+                  className="text-gray-700 hover:text-red-600 transition-colors group"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                </button>
+              </div>
+            ) : (
+              <Link 
+                to="/login" 
+                className="hidden sm:block text-gray-700 hover:text-primary-600 transition-colors group"
+              >
+                <User className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
+              </Link>
+            )}
 
             {/* Mobile Menu Toggle */}
             <button
@@ -129,14 +156,38 @@ export default function Navbar() {
               >
                 Contact
               </a>
-              <Link 
-                to="/account" 
-                className="text-gray-700 hover:text-primary-600 font-medium transition-colors px-4 py-2 hover:bg-gray-50 rounded-lg flex items-center space-x-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <User className="w-5 h-5" />
-                <span>Account</span>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link 
+                    to="/account" 
+                    className="text-gray-700 hover:text-primary-600 font-medium transition-colors px-4 py-2 hover:bg-gray-50 rounded-lg flex items-center space-x-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="w-5 h-5" />
+                    <span>Account</span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsMenuOpen(false);
+                      navigate('/');
+                    }}
+                    className="text-gray-700 hover:text-red-600 font-medium transition-colors px-4 py-2 hover:bg-gray-50 rounded-lg flex items-center space-x-2 w-full text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                <Link 
+                  to="/login" 
+                  className="text-gray-700 hover:text-primary-600 font-medium transition-colors px-4 py-2 hover:bg-gray-50 rounded-lg flex items-center space-x-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <User className="w-5 h-5" />
+                  <span>Login</span>
+                </Link>
+              )}
               
               {/* Mobile Search */}
               <form onSubmit={handleSearch} className="px-4">
@@ -155,6 +206,9 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
+      {/* Mini Cart */}
+      <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
     </nav>
   );
 }

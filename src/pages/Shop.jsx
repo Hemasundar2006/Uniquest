@@ -9,8 +9,14 @@ const categories = ['All', 'Electronics', 'Wearables', 'Accessories', 'Home & Of
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
   { value: 'price-low-high', label: 'Price: Low to High' },
-  { value: 'price-high-low', label: 'Price: High to Low' }
+  { value: 'price-high-low', label: 'Price: High to Low' },
+  { value: 'artist', label: 'Artist A-Z' },
+  { value: 'collection', label: 'Collection' }
 ];
+
+// Mock artists and collections - in production, these would come from API
+const artists = ['All', 'John Smith', 'Sarah Johnson', 'Michael Chen', 'Emma Davis'];
+const collections = ['All', 'Premium Collection', 'Artisan Series', 'Limited Edition', 'Heritage Line'];
 
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,6 +26,8 @@ export default function Shop() {
   
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedArtist, setSelectedArtist] = useState('All');
+  const [selectedCollection, setSelectedCollection] = useState('All');
   const [priceRange, setPriceRange] = useState({ min: 0, max: 500 });
   const [sortBy, setSortBy] = useState('newest');
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,12 +37,14 @@ export default function Shop() {
     // Get search query from URL
     const searchQuery = searchParams.get('search');
     loadProducts(searchQuery);
-  }, [selectedCategory, priceRange, sortBy, searchParams]);
+  }, [selectedCategory, selectedArtist, selectedCollection, priceRange, sortBy, searchParams]);
 
   const loadProducts = async (searchQuery = null) => {
     setLoading(true);
     const filters = {
       category: selectedCategory,
+      artist: selectedArtist !== 'All' ? selectedArtist : undefined,
+      collection: selectedCollection !== 'All' ? selectedCollection : undefined,
       minPrice: priceRange.min,
       maxPrice: priceRange.max,
       sortBy: sortBy,
@@ -43,7 +53,17 @@ export default function Shop() {
     
     const response = await fetchProducts(filters);
     if (response.success) {
-      setProducts(response.data);
+      let filteredProducts = response.data;
+      
+      // Client-side filtering for artist and collection (since mock API may not support these)
+      if (selectedArtist !== 'All') {
+        filteredProducts = filteredProducts.filter(p => p.artist === selectedArtist);
+      }
+      if (selectedCollection !== 'All') {
+        filteredProducts = filteredProducts.filter(p => p.collection === selectedCollection);
+      }
+      
+      setProducts(filteredProducts);
     }
     setLoading(false);
   };
@@ -56,6 +76,18 @@ export default function Shop() {
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
+    setCurrentPage(1);
+    setShowMobileFilters(false);
+  };
+
+  const handleArtistChange = (artist) => {
+    setSelectedArtist(artist);
+    setCurrentPage(1);
+    setShowMobileFilters(false);
+  };
+
+  const handleCollectionChange = (collection) => {
+    setSelectedCollection(collection);
     setCurrentPage(1);
     setShowMobileFilters(false);
   };
@@ -88,6 +120,46 @@ export default function Shop() {
               }`}
             >
               {category}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Artists */}
+      <div>
+        <h3 className="font-semibold text-gray-900 mb-4">Artist</h3>
+        <div className="space-y-2">
+          {artists.map(artist => (
+            <button
+              key={artist}
+              onClick={() => handleArtistChange(artist)}
+              className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                selectedArtist === artist
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {artist}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Collections */}
+      <div>
+        <h3 className="font-semibold text-gray-900 mb-4">Collection</h3>
+        <div className="space-y-2">
+          {collections.map(collection => (
+            <button
+              key={collection}
+              onClick={() => handleCollectionChange(collection)}
+              className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                selectedCollection === collection
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {collection}
             </button>
           ))}
         </div>
@@ -134,15 +206,15 @@ export default function Shop() {
     <div className="bg-gray-50 min-h-screen">
       <div className="container-custom py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Shop All Products</h1>
-          <p className="text-gray-600">Discover our complete collection of premium products</p>
+        <div className="mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">Shop All Products</h1>
+          <p className="text-sm sm:text-base text-gray-600">Discover our complete collection of premium products</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="card p-6 sticky top-24">
+            <div className="card p-4 lg:p-6 sticky top-24">
               <FilterSidebar />
             </div>
           </aside>
@@ -150,7 +222,7 @@ export default function Shop() {
           {/* Main Content */}
           <div className="flex-1">
             {/* Toolbar */}
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
               <div className="flex items-center gap-4 w-full sm:w-auto">
                 {/* Mobile Filter Button */}
                 <button
